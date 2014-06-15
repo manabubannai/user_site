@@ -56,7 +56,9 @@ class Main extends CI_Controller {
 
 			//generate a random key
 			$key = md5(uniqid());
+			
 			$this->load->library('email', array('mailtype'=>'html'));
+			$this->load->model('model_users');
 
 			$this->email->from('me@mywebsite.com', "Manabu");
 			$this->email->to($this->input->post('email'));
@@ -68,13 +70,14 @@ class Main extends CI_Controller {
 			$this->email->message($message);
 
 			//send the email to the user
-			if($this->email->send()){
-				echo "This email has been sent!";
-			}else{
-				echo "Could not send the email";
-			}
-
+			if($this->model_users->add_temp_user($key)){
+				if($this->email->send()){
+					echo "This email has been sent!";
+				}else echo "Could not send the email";
+			}else echo "problem adding to database";
+	
 			//add them to the temp_users db
+
 
 		}else{
 			$this->load->view('signup');
@@ -95,5 +98,37 @@ class Main extends CI_Controller {
 		$this->session->sess_destroy();
 		redirect('main/login');
 	}
+	
+	public function resister_user($key){
+		$this->load->model('model_users');
+		
+		if($this->model_users->is_key_valid($key)){
+			if($newmail = $this->model_users->add_user($key)){
+			
+				$data = array(
+					'email' => $newemail,
+					'is_logged_in' =>1
+				);
+				
+				$this->session->set_userdata($data);
+				redirect('main/members');
+				
+			}else echo "failed to add user, plz try again.";
+		}else echo "invalid key";
+	}
+	
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
